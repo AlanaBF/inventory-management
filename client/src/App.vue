@@ -2,30 +2,21 @@
   <div class="app">
     <header class="top-nav">
       <div class="nav-container">
+        <button
+          class="mobile-toggle"
+          @click="toggleSidebar"
+          :aria-label="effectivelyCollapsed ? 'Expand navigation' : 'Collapse navigation'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <div class="logo">
           <h1>{{ t('nav.companyName') }}</h1>
           <span class="subtitle">{{ t('nav.subtitle') }}</span>
         </div>
-        <nav class="nav-tabs">
-          <router-link to="/" :class="{ active: $route.path === '/' }">
-            {{ t('nav.overview') }}
-          </router-link>
-          <router-link to="/inventory" :class="{ active: $route.path === '/inventory' }">
-            {{ t('nav.inventory') }}
-          </router-link>
-          <router-link to="/orders" :class="{ active: $route.path === '/orders' }">
-            {{ t('nav.orders') }}
-          </router-link>
-          <router-link to="/spending" :class="{ active: $route.path === '/spending' }">
-            {{ t('nav.finance') }}
-          </router-link>
-          <router-link to="/demand" :class="{ active: $route.path === '/demand' }">
-            {{ t('nav.demandForecast') }}
-          </router-link>
-          <router-link to="/reports" :class="{ active: $route.path === '/reports' }">
-            Reports
-          </router-link>
-        </nav>
         <LanguageSwitcher />
         <ProfileMenu
           @show-profile-details="showProfileDetails = true"
@@ -33,10 +24,110 @@
         />
       </div>
     </header>
+
     <FilterBar />
-    <main class="main-content">
-      <router-view />
-    </main>
+
+    <div class="layout-row">
+      <aside class="sidebar" :class="{ collapsed: effectivelyCollapsed }">
+        <button
+          v-if="!isSmallScreen"
+          class="sidebar-toggle"
+          @click="toggleSidebar"
+          :title="manuallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+          :aria-label="manuallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        >
+          <svg v-if="manuallyCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+
+        <nav class="sidebar-nav">
+          <router-link to="/" :class="{ active: $route.path === '/' }" :title="t('nav.overview')">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+              </svg>
+            </span>
+            <span class="label">{{ t('nav.overview') }}</span>
+          </router-link>
+
+          <router-link to="/inventory" :class="{ active: $route.path === '/inventory' }" :title="t('nav.inventory')">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </span>
+            <span class="label">{{ t('nav.inventory') }}</span>
+          </router-link>
+
+          <router-link to="/orders" :class="{ active: $route.path === '/orders' }" :title="t('nav.orders')">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <line x1="8" y1="11" x2="16" y2="11"/>
+                <line x1="8" y1="15" x2="14" y2="15"/>
+              </svg>
+            </span>
+            <span class="label">{{ t('nav.orders') }}</span>
+          </router-link>
+
+          <router-link to="/restocking" :class="{ active: $route.path === '/restocking' }" title="Restocking">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+            </span>
+            <span class="label">Restocking</span>
+          </router-link>
+
+          <router-link to="/spending" :class="{ active: $route.path === '/spending' }" :title="t('nav.finance')">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </span>
+            <span class="label">{{ t('nav.finance') }}</span>
+          </router-link>
+
+          <router-link to="/demand" :class="{ active: $route.path === '/demand' }" :title="t('nav.demandForecast')">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+            </span>
+            <span class="label">{{ t('nav.demandForecast') }}</span>
+          </router-link>
+
+          <router-link to="/reports" :class="{ active: $route.path === '/reports' }" title="Reports">
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </span>
+            <span class="label">Reports</span>
+          </router-link>
+        </nav>
+      </aside>
+
+      <main class="main-content" :class="{ 'sidebar-collapsed': effectivelyCollapsed }">
+        <router-view />
+      </main>
+    </div>
 
     <ProfileDetailsModal
       :is-open="showProfileDetails"
@@ -55,7 +146,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { api } from './api'
 import { useAuth } from './composables/useAuth'
 import { useI18n } from './composables/useI18n'
@@ -64,6 +155,9 @@ import ProfileMenu from './components/ProfileMenu.vue'
 import ProfileDetailsModal from './components/ProfileDetailsModal.vue'
 import TasksModal from './components/TasksModal.vue'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
+
+const SIDEBAR_STORAGE_KEY = 'sidebarCollapsed'
+const SMALL_SCREEN_BREAKPOINT = 1024
 
 export default {
   name: 'App',
@@ -81,7 +175,24 @@ export default {
     const showTasks = ref(false)
     const apiTasks = ref([])
 
-    // Merge mock tasks from currentUser with API tasks
+    const manuallyCollapsed = ref(
+      typeof window !== 'undefined' && localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1'
+    )
+    const isSmallScreen = ref(false)
+
+    // Effective state: small screens force icons-only; otherwise the user's manual choice wins.
+    const effectivelyCollapsed = computed(() => isSmallScreen.value || manuallyCollapsed.value)
+
+    const updateScreenSize = () => {
+      isSmallScreen.value = window.innerWidth <= SMALL_SCREEN_BREAKPOINT
+    }
+
+    const toggleSidebar = () => {
+      if (isSmallScreen.value) return
+      manuallyCollapsed.value = !manuallyCollapsed.value
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, manuallyCollapsed.value ? '1' : '0')
+    }
+
     const tasks = computed(() => {
       return [...currentUser.value.tasks, ...apiTasks.value]
     })
@@ -97,7 +208,6 @@ export default {
     const addTask = async (taskData) => {
       try {
         const newTask = await api.createTask(taskData)
-        // Add new task to the beginning of the array
         apiTasks.value.unshift(newTask)
       } catch (err) {
         console.error('Failed to add task:', err)
@@ -106,17 +216,14 @@ export default {
 
     const deleteTask = async (taskId) => {
       try {
-        // Check if it's a mock task (from currentUser)
         const isMockTask = currentUser.value.tasks.some(t => t.id === taskId)
 
         if (isMockTask) {
-          // Remove from mock tasks
           const index = currentUser.value.tasks.findIndex(t => t.id === taskId)
           if (index !== -1) {
             currentUser.value.tasks.splice(index, 1)
           }
         } else {
-          // Remove from API tasks
           await api.deleteTask(taskId)
           apiTasks.value = apiTasks.value.filter(t => t.id !== taskId)
         }
@@ -127,14 +234,11 @@ export default {
 
     const toggleTask = async (taskId) => {
       try {
-        // Check if it's a mock task (from currentUser)
         const mockTask = currentUser.value.tasks.find(t => t.id === taskId)
 
         if (mockTask) {
-          // Toggle mock task status
           mockTask.status = mockTask.status === 'pending' ? 'completed' : 'pending'
         } else {
-          // Toggle API task
           const updatedTask = await api.toggleTask(taskId)
           const index = apiTasks.value.findIndex(t => t.id === taskId)
           if (index !== -1) {
@@ -146,7 +250,15 @@ export default {
       }
     }
 
-    onMounted(loadTasks)
+    onMounted(() => {
+      updateScreenSize()
+      window.addEventListener('resize', updateScreenSize)
+      loadTasks()
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', updateScreenSize)
+    })
 
     return {
       t,
@@ -155,7 +267,11 @@ export default {
       tasks,
       addTask,
       deleteTask,
-      toggleTask
+      toggleTask,
+      manuallyCollapsed,
+      isSmallScreen,
+      effectivelyCollapsed,
+      toggleSidebar
     }
   }
 }
@@ -198,14 +314,35 @@ body {
   align-items: center;
   padding: 0 2rem;
   height: 70px;
+  gap: 1rem;
 }
 
-.nav-container > .nav-tabs {
-  margin-left: auto;
-  margin-right: 1rem;
+.mobile-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.mobile-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mobile-toggle:hover {
+  color: #0f172a;
+  background: #f1f5f9;
 }
 
 .nav-container > .language-switcher {
+  margin-left: auto;
   margin-right: 1rem;
 }
 
@@ -230,48 +367,165 @@ body {
   border-left: 1px solid #e2e8f0;
 }
 
-.nav-tabs {
+.layout-row {
   display: flex;
-  gap: 0.25rem;
-}
-
-.nav-tabs a {
-  padding: 0.625rem 1.25rem;
-  color: #64748b;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.938rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.nav-tabs a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
-}
-
-.nav-tabs a.active {
-  color: #2563eb;
-  background: #eff6ff;
-}
-
-.nav-tabs a.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #2563eb;
-}
-
-.main-content {
   flex: 1;
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
+  align-items: stretch;
+}
+
+.sidebar {
+  width: 220px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 1rem 0;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+  position: sticky;
+  top: 70px;
+  align-self: flex-start;
+  height: calc(100vh - 70px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.sidebar-toggle {
+  align-self: flex-end;
+  margin: 0 0.75rem 0.75rem auto;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  align-self: center;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.sidebar-toggle:hover {
+  color: #0f172a;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.sidebar-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.938rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-nav a:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.sidebar-nav a.active {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.sidebar-nav a .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-nav a .icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-nav a .label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar.collapsed .sidebar-nav a {
+  justify-content: center;
+  padding: 0.625rem 0;
+}
+
+.sidebar.collapsed .sidebar-nav a .label {
+  display: none;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
   padding: 1.5rem 2rem;
+}
+
+@media (max-width: 1024px) {
+  .mobile-toggle {
+    display: inline-flex;
+  }
+
+  .sidebar {
+    width: 64px;
+  }
+
+  .sidebar .sidebar-nav a .label {
+    display: none;
+  }
+
+  .sidebar .sidebar-nav a {
+    justify-content: center;
+    padding: 0.625rem 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 1rem;
+  }
+
+  .nav-container {
+    padding: 0 1rem;
+  }
+
+  .subtitle {
+    display: none;
+  }
 }
 
 .page-header {
