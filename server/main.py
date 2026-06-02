@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
@@ -120,6 +121,17 @@ class CreatePurchaseOrderRequest(BaseModel):
     expected_delivery_date: str
     notes: Optional[str] = None
 
+class OrderItemRequest(BaseModel):
+    sku: str
+    name: str
+    quantity: int
+    unit_price: float
+
+class CreateOrderRequest(BaseModel):
+    items: List[OrderItemRequest]
+    customer: Optional[str] = "Internal Restock"
+    lead_time_days: int = 7
+
 # API endpoints
 @app.get("/")
 def root():
@@ -160,6 +172,40 @@ def get_order(order_id: str):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+@app.post("/api/orders", response_model=Order)
+def create_order(req: CreateOrderRequest):
+    """Create a new order (e.g., from the Restocking tab). Stored in-memory only."""
+    if not req.items:
+        raise HTTPException(status_code=400, detail="Order must contain at least one item")
+
+    now = datetime.now()
+    expected = now + timedelta(days=req.lead_time_days)
+    total = sum(item.quantity * item.unit_price for item in req.items)
+
+    # Generate a new numeric id by taking max existing id + 1 (orders ids are stringified ints)
+    new_id = str(max((int(o["id"]) for o in orders), default=0) + 1)
+    # Order number prefix RST- for internal restock orders, otherwise ORD-
+    is_restock = (req.customer or "").lower() == "internal restock"
+    prefix = "RST" if is_restock else "ORD"
+    seq = sum(1 for o in orders if o.get("order_number", "").startswith(f"{prefix}-")) + 1
+    order_number = f"{prefix}-{1000 + seq}"
+
+    new_order = {
+        "id": new_id,
+        "order_number": order_number,
+        "customer": req.customer,
+        "items": [item.model_dump() for item in req.items],
+        "status": "Processing",
+        "order_date": now.isoformat(timespec="seconds"),
+        "expected_delivery": expected.isoformat(timespec="seconds"),
+        "total_value": round(total, 2),
+        "actual_delivery": None,
+        "warehouse": None,
+        "category": None,
+    }
+    orders.append(new_order)
+    return new_order
 
 @app.get("/api/demand", response_model=List[DemandForecast])
 def get_demand_forecasts():
